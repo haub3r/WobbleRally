@@ -1,0 +1,253 @@
+<!DOCTYPE HTML>
+<HTML>
+	<HEAD>
+		<link href='http://fonts.googleapis.com/css?family=Lobster' rel='stylesheet' type='text/css'>
+		<TITLE>Wobble Rally v2</TITLE>
+	</HEAD>
+
+	<BODY>
+		<!--<p>Klikkaa ruutua ja ohjaa nuolilla!</p>-->
+		
+		<SECTION style="border-style: solid; border-width: 2px; width: 1000px; height: 500px">
+
+			<CANVAS WIDTH="1000" HEIGHT="500" ID="canvas_1" tabindex="0">
+				Canvas not supported
+			</CANVAS>
+			
+		</SECTION>
+		<audio id="beat"><source src="beat.wav"></audio>
+	</BODY>
+	<SCRIPT>
+		var canvas = document.getElementById("canvas_1");
+		canvas.addEventListener('keydown', DoKeyDown, true);
+		canvas.addEventListener('keyup', DoKeyUp, true);
+		canvas_context = canvas.getContext("2d");
+		var audio = new window.webkitAudioContext();
+		
+		var filter = audio.createBiquadFilter();
+		filter.connect(audio.destination);
+		filter.Q.value = 8;
+		filter.type = filter.LOWPASS;
+		filter.frequency.value = 800;
+		
+		
+		var osc = audio.createOscillator();
+		var carGain = audio.createGain();
+		carGain.gain.setValueAtTime(0.4, audio.currentTime);
+		osc.frequency.value = 100; //when pitch mod is off
+        osc.type = "square";
+		osc.connect(carGain);
+		carGain.connect(filter);
+		//osc.connect(filter);
+        osc.start(0);
+		beat.loop = true;
+		//beat.controls = true;
+		beat.play();
+		setInterval(beatsync,1700);
+		canvas.focus();
+
+		function beatsync() {
+			beat.pause();
+			beat.currentTime = 0;
+			if (collided == false) {
+				beat.play();
+			}
+		}
+
+		
+		var sound = {//basefreq, attack, decay, pitchmod amount, waveform
+			collide: [200,5,1000,8,"sawtooth"],
+		};
+		
+
+	var x = 600;
+	var y = 100;
+	
+	var canvasX = canvas.width/2;
+	var canvasY = canvas.height/2;
+
+	// boundary
+	var minx = 10;
+	var miny = 10;
+	var maxx = 990; // 10 pixels for character's width
+	var maxy = 490; // 10 pixels for character's width
+	var collided = false;
+			
+	var direction = 0;
+	var speed = 0;
+	var maxSpeed = 8;
+	var upPressed = 0;
+	var downPressed = 0;
+	var leftPressed = 0;
+	var rightPressed = 0;
+		
+
+		
+function slowDown(){
+ if (speed > 0)
+	speed = speed - 0.01;
+ if (speed < 0)
+	speed = speed + 0.01;
+ if (Math.abs(speed) < 0.02) {
+	speed = 0;}
+}
+
+//rotates the car block
+function CarPic (x,y,turn,color) { 
+      var context = canvas.getContext('2d');
+      var rectWidth = 10;
+      var rectHeight = 20;
+
+      // translate context to center of canvas
+		context.translate(x,y);
+
+      // rotate 45 degrees clockwise
+		context.rotate(turn);
+		context.fillStyle = color;
+		context.fillRect((rectWidth / -2),(rectHeight / -2), rectWidth, rectHeight);
+}
+
+
+
+gameLoop();
+function gameLoop(){
+
+//glutch sound fx
+if (Math.abs(speed) < 2) {
+	osc.frequency.value = Math.abs(-speed*20)+40;
+	filter.frequency.value = -Math.cos(audio.currentTime*16)*500 + 600;
+}
+if (Math.abs(speed) >= 2 && Math.abs(speed) <= 3.5) {
+	osc.frequency.value = Math.abs(-speed*20)+20;
+	filter.frequency.value = -Math.cos(audio.currentTime*16*4/3)*500 + 600;
+} 
+if (Math.abs(speed) > 3.5) {
+	osc.frequency.value = Math.abs(-speed*20);
+	filter.frequency.value = -Math.cos(speed*speed*5)*900 + 1000;
+}
+
+clearCanvas();
+canvas_context.fillStyle = "black";
+canvas_context.fillRect(0, 0, canvas_1.width, canvas_1.height);
+canvas_context.fillStyle = "#D11919";
+canvas_context.textAlign = "center";
+canvas_context.font = "70px Lobster";
+canvas_context.fillText("WOBBLE RALLY", canvasX, canvasY);
+
+
+if (Math.abs(direction) > 2*Math.PI) {
+	direction = 0;
+}
+  x = Math.min(Math.max(x + Math.sin(direction)*speed, minx), maxx);
+  y = Math.min(Math.max(y + Math.cos(direction)*speed, miny), maxy);
+
+//canvas_context.fillRect(x, y, 2, 2);
+
+
+	
+CarPic(x,y,-1*direction,'blue');
+
+if ((x == maxx || x == minx || y == maxy || y == miny)  && Math.abs(speed) != 0) {
+	CarPic(x,y,-1*direction,'red');
+	if (collided == false) {
+			osc.stop();
+		}
+	speed = -0.2*speed;
+	beeper(sound.collide);
+	collided = true;
+	beat.pause();
+		
+}
+
+
+
+//change speed based on keyboard events
+ if (upPressed == 1){
+	speed = Math.max(speed - 0.01, -1*maxSpeed);}
+if (downPressed == 1){
+   speed = Math.min(speed + 0.07, maxSpeed*0.1);}
+ if (rightPressed == 1 && speed != 0){
+	if (speed > 0) {
+		direction = direction + 0.04;
+		} else {
+		direction = direction - 0.2/Math.max(Math.abs(speed),3);
+		}
+	
+	}
+  if (leftPressed == 1 && speed != 0){
+  
+  
+  	if (speed > 0) {
+		direction = direction - 0.04;
+		} else {
+		direction = direction + 0.2/Math.max(Math.abs(speed),3);
+		}
+  }
+
+ if (upPressed == 0 && downPressed == 0){
+    slowDown();}
+
+setTimeout("gameLoop()", 10);
+}
+
+		function DoKeyDown(e){
+			if (e.keyCode == 38) {
+				upPressed = 1;
+			}
+			if (e.keyCode == 40) {
+				downPressed = 1;
+			}
+			if (e.keyCode == 37) {
+				leftPressed = 1;
+			}
+			if (e.keyCode == 39) {
+				rightPressed = 1;
+			}
+		}
+		function DoKeyUp(e){
+			if (e.keyCode == 38) {
+				upPressed = 0;
+			}
+			if (e.keyCode == 40) {
+				downPressed = 0;
+			}
+			if (e.keyCode == 37) {
+				leftPressed = 0;
+			}
+			if (e.keyCode == 39) {
+				rightPressed = 0;
+			}
+		}
+
+		function clearCanvas() {
+			canvas.width = canvas.width;
+		}
+		
+		function beeper(note) {
+			var gain = audio.createGain(),
+				osc = audio.createOscillator();
+				gain.connect(audio.destination);//run throught the filter
+				gain.gain.setValueAtTime(0, audio.currentTime);
+				
+			gain.gain.linearRampToValueAtTime(0.4, audio.currentTime + note[1] / 1000); //attack
+			setTimeout(function() {
+				gain.gain.linearRampToValueAtTime(0, audio.currentTime + note[2] / 1000);//decay
+			}, note[1])
+			
+			osc.frequency.setValueAtTime(note[0]*note[3], audio.currentTime);
+			osc.frequency.linearRampToValueAtTime(note[0], audio.currentTime + 1000 / 1000);
+			
+			//osc.frequency.value = note[0]; //when pitch mod is off
+			osc.type = note[4];
+			osc.connect(gain); //enables envelope controls
+			osc.start(0);	
+			
+			
+			setTimeout(function() {
+			   osc.stop(0);
+			   osc.disconnect(gain);
+			}, note[1] + note[2]);
+		}
+
+	</SCRIPT>
+</HTML>
