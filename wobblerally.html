@@ -81,8 +81,11 @@
 	var leftPressed = 0;
 	var rightPressed = 0;
 		
-
-		
+	var textCount = "b";
+	var delayInt = 10;
+	var collideCount = 300;
+	var gameoverCount = 100;
+	
 function slowDown(){
  if (speed > 0)
 	speed = speed - 0.01;
@@ -108,9 +111,8 @@ function CarPic (x,y,turn,color) {
 }
 
 
-var textCount = "b";
-var delayInt = 10;
 
+//game loop starts
 gameLoop();
 function gameLoop(){
 
@@ -128,11 +130,17 @@ if (Math.abs(speed) > 3.5) {
 	filter.frequency.value = -Math.cos(speed*speed*5)*900 + 1000;
 }
 
+
+//draw the ground
 clearCanvas();
 canvas_context.fillStyle = "black";
 canvas_context.fillRect(0, 0, canvas_1.width, canvas_1.height);
 
-flashText(textCount);
+
+//text code
+if (collided == false){
+	flashText(textCount);
+}
 
 if (delayInt == 0){
 	if (textCount == "b"){
@@ -147,11 +155,6 @@ else {
 	delayInt = delayInt - 1;
 }
 
-//testifunkkari
-//if (canvas_context.fillStyle == "#D11919"){
-//	canvas_context.fillStyle = "#0099FF";
-//	canvas_context.fillText("WOBBLE RALLY", canvasX, canvasY);
-//}
 
 if (Math.abs(direction) > 2*Math.PI) {
 	direction = 0;
@@ -162,37 +165,29 @@ if (Math.abs(direction) > 2*Math.PI) {
 //canvas_context.fillRect(x, y, 2, 2);
 
 
-	
-CarPic(x,y,-1*direction,'blue');
-
-if ((x == maxx || x == minx || y == maxy || y == miny)  && Math.abs(speed) != 0) {
+if(collided == false){
+	CarPic(x,y,-1*direction,'blue');
+}
+else{
 	CarPic(x,y,-1*direction,'red');
-	if (collided == false) {
-			osc.stop();
-		}
-	speed = -0.2*speed;
-	beeper(sound.collide);
-	collided = true;
-	beat.pause();
-		
 }
 
-
-
 //change speed based on keyboard events
- if (upPressed == 1){
+if (upPressed == 1){
 	speed = Math.max(speed - 0.01, -1*maxSpeed);}
 if (downPressed == 1){
    speed = Math.min(speed + 0.07, maxSpeed*0.1);}
- if (rightPressed == 1 && speed != 0){
+if (rightPressed == 1 && speed != 0){
 	if (speed > 0) {
 		direction = direction + 0.04;
-		} else {
+	} 
+	else {
 		direction = direction - 0.2/Math.max(Math.abs(speed),3);
-		}
-	
 	}
-  if (leftPressed == 1 && speed != 0){
+	
+}
+
+if (leftPressed == 1 && speed != 0){
   
   
   	if (speed > 0) {
@@ -205,8 +200,51 @@ if (downPressed == 1){
  if (upPressed == 0 && downPressed == 0){
     slowDown();}
 
+//collisions
+if ((x == maxx || x == minx || y == maxy || y == miny)  && Math.abs(speed) != 0) {
+	if (collided == false) {
+			osc.stop();
+		}
+	speed = -0.2*speed;
+	beeper(sound.collide);
+	collided = true;
+	beat.pause();
+	canvas.removeEventListener('keydown', DoKeyDown, true);
+}
+
+if(collided == true){
+	if(collideCount != 0){
+		collideCount = --collideCount;
+	}
+}
+
+if (collideCount == 0){
+//	setTimeout(function(){
+	clearCanvas();
+	canvas_context.fillStyle = "black";
+	canvas_context.fillRect(0, 0, canvas_1.width, canvas_1.height);
+	canvas_context.fillStyle = "#0099FF";
+	canvas_context.textAlign = "center";
+	canvas_context.font = "70px Lobster";
+	canvas_context.fillText("Game Over", canvasX, canvasY);
+	if(gameoverCount != 0){
+		gameoverCount = --gameoverCount;
+	}
+	else if (gameoverCount == 0){
+		canvas_context.fillStyle = "#CC00CC";
+		canvas_context.textAlign = "center";
+		canvas_context.font = "20px Lobster";
+		canvas_context.fillText("F5 to ride again", canvasX, (canvasY+50));
+	}
+//	},3000);
+	//return;
+	//endLoop();
+}
+	
 setTimeout("gameLoop()", 10);
 }
+
+
 
 	function flashText(textCount){
 		if (textCount == "b"){
