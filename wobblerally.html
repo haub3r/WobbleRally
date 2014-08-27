@@ -108,6 +108,8 @@ function CarPic (x,y,turn,color) {
 }
 
 
+var textCount = "b";
+var delayInt = 10;
 
 gameLoop();
 function gameLoop(){
@@ -129,11 +131,27 @@ if (Math.abs(speed) > 3.5) {
 clearCanvas();
 canvas_context.fillStyle = "black";
 canvas_context.fillRect(0, 0, canvas_1.width, canvas_1.height);
-canvas_context.fillStyle = "#D11919";
-canvas_context.textAlign = "center";
-canvas_context.font = "70px Lobster";
-canvas_context.fillText("WOBBLE RALLY", canvasX, canvasY);
 
+flashText(textCount);
+
+if (delayInt == 0){
+	if (textCount == "b"){
+	textCount = "r";
+	}
+	else if (textCount == "r"){
+		textCount = "b";
+	}	
+	delayInt = 10;
+}
+else {
+	delayInt = delayInt - 1;
+}
+
+//testifunkkari
+//if (canvas_context.fillStyle == "#D11919"){
+//	canvas_context.fillStyle = "#0099FF";
+//	canvas_context.fillText("WOBBLE RALLY", canvasX, canvasY);
+//}
 
 if (Math.abs(direction) > 2*Math.PI) {
 	direction = 0;
@@ -189,6 +207,18 @@ if (downPressed == 1){
 
 setTimeout("gameLoop()", 10);
 }
+
+	function flashText(textCount){
+		if (textCount == "b"){
+			canvas_context.fillStyle = "#0099FF";
+		}
+		else if (textCount == "r"){
+			canvas_context.fillStyle = "#D11919";
+		}
+		canvas_context.textAlign = "center";
+		canvas_context.font = "70px Lobster";
+		canvas_context.fillText("WOBBLE RALLY", canvasX, canvasY);
+	}
 
 		function DoKeyDown(e){
 			if (e.keyCode == 38) {
